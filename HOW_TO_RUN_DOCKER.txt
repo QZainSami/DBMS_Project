@@ -1,0 +1,54 @@
+=========================================================
+ HOW TO RUN THIS PROJECT ON A NEW PC (USING DOCKER)
+=========================================================
+
+Since this project has a Graphical User Interface (JavaFX) and a Database (MySQL), Docker needs a little help to display the UI on Windows. Follow these steps exactly:
+
+---------------------------------------------------------
+ STEP 1: INSTALL PREREQUISITES ON THE NEW PC
+---------------------------------------------------------
+1. Install "Docker Desktop" (and make sure it is running).
+2. Install "VcXsrv" (This is an X-Server that allows Docker to draw the UI on Windows). You can download it from SourceForge.
+
+---------------------------------------------------------
+ STEP 2: START THE X-SERVER (CRITICAL FOR UI)
+---------------------------------------------------------
+1. Open the start menu and launch "XLaunch" (part of VcXsrv).
+2. Click "Next" on the first screen (Multiple windows).
+3. Click "Next" on the second screen (Start no client).
+4. On the third screen ("Extra Settings"), you MUST check the box that says "Disable access control".
+5. Click "Next" and then "Finish".
+
+---------------------------------------------------------
+ STEP 3: FIND YOUR LOCAL IP ADDRESS
+---------------------------------------------------------
+1. Open Command Prompt or PowerShell.
+2. Type the following command:
+   ipconfig
+3. Look for your "IPv4 Address" (It usually looks like 192.168.x.x or 10.x.x.x). Note this number down.
+
+---------------------------------------------------------
+ STEP 4: RUN THE PROJECT
+---------------------------------------------------------
+1. Open a terminal (PowerShell or Command Prompt) inside this project folder.
+2. Set the DISPLAY environment variable so Docker knows where to send the graphics. Run this command, replacing the IP with the one you found in Step 3:
+
+   $env:DISPLAY="192.168.1.15:0"
+
+   (Note: If you are using Command Prompt instead of PowerShell, use: set DISPLAY=192.168.1.15:0)
+
+3. Finally, start both the Database and the App using Docker Compose:
+
+   docker-compose up --build
+
+---------------------------------------------------------
+ WHAT HAPPENS NEXT?
+---------------------------------------------------------
+Docker will:
+1. Download a fresh MySQL database server.
+2. Automatically create your tables and insert 400+ rows of dummy data.
+3. Build your Java application.
+4. Launch the app on your screen automatically!
+
+To stop everything when you're done, go back to your terminal and press Ctrl+C, or run:
+docker-compose down

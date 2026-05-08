@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: automotive_db
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: automotive_inventory
+    ports:
+      - "3306:3306"
+    volumes:
+      # This automatically runs your SQL scripts when the container first starts!
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: automotive_app
+    depends_on:
+      db:
+        condition: service_healthy
+    # Using host network makes X11 forwarding easier on Linux.
+    # On Windows, you still need to provide the DISPLAY variable to point to VcXsrv
+    environment:
+      - DISPLAY=${DISPLAY:-host.docker.internal:0}
+      - DB_URL=jdbc:mysql://db:3306/automotive_inventory?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    volumes:
+      # If on Linux, you need X11 socket mapping. Ignored on Windows if not present.
+      - /tmp/.X11-unix:/tmp/.X11-unix
