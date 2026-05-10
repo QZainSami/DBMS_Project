@@ -555,18 +555,58 @@ public class Projectv5 extends Application {
 
         actionButtons.getChildren().addAll(addCar, deleteCar, sellCar, showAllCars);
 
-        // Text area for displaying cars
-        TextArea stockArea = new TextArea();
-        stockArea.setEditable(false);
-        stockArea.setPrefHeight(700);
-        stockArea.setPrefWidth(600);
-        stockArea.setFont(javafx.scene.text.Font.font("Monospaced", 12));
-        stockArea.setWrapText(false);
+        // Table view for displaying cars
+        TableView<Car> carTable = new TableView<>();
+        carTable.getStyleClass().add("modern-table");
+        carTable.setPrefHeight(700);
+        carTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<Car, String> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getId()));
+
+        TableColumn<Car, String> modelCol = new TableColumn<>("Model");
+        modelCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getModel()));
+
+        TableColumn<Car, String> variantCol = new TableColumn<>("Variant");
+        variantCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getVariant()));
+
+        TableColumn<Car, Double> priceCol = new TableColumn<>("Price");
+        priceCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getPrice()).asObject());
+
+        TableColumn<Car, Double> mileageCol = new TableColumn<>("Mileage");
+        mileageCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getMileage()).asObject());
+
+        TableColumn<Car, String> colorCol = new TableColumn<>("Color");
+        colorCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getColor()));
+
+        TableColumn<Car, String> typeCol = new TableColumn<>("Type");
+        typeCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getType()));
+
+        TableColumn<Car, Double> weightCol = new TableColumn<>("Weight");
+        weightCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getWeight()).asObject());
+
+        TableColumn<Car, String> numberPlateCol = new TableColumn<>("Number Plate");
+        numberPlateCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getNumberPlate()));
+
+        TableColumn<Car, String> chassisCol = new TableColumn<>("Chassis No.");
+        chassisCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getChassisNumber()));
+
+        carTable.getColumns().addAll(idCol, modelCol, variantCol, priceCol, mileageCol, colorCol, typeCol, weightCol, numberPlateCol, chassisCol);
+
+        // Method to refresh table
+        Runnable refreshTable = () -> {
+            try {
+                carTable.getItems().setAll(carDAO.getAllCars());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        };
+        refreshTable.run();
 
         // Main content
         VBox content = new VBox(15);
         content.setPadding(new Insets(15));
-        content.getChildren().addAll(actionButtons, stockArea);
+        content.getChildren().addAll(actionButtons, carTable);
         mainLayout.setCenter(content);
 
         // Set the scene
@@ -687,7 +727,7 @@ public class Projectv5 extends Application {
                     sellStage.close();
 
                     // Refresh the car list to reflect the changes
-                    showAllCars.fire();
+                    refreshTable.run();
 
                 } catch (Exception ex) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -818,73 +858,19 @@ public class Projectv5 extends Application {
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    Alert alert = new Alert(Alert.AlertType.ERROR, "Error deleting car: " + ex.getMessage());
+                    String msg = ex.getMessage();
+                    String displayMsg = (msg != null && msg.contains("foreign key constraint fails")) 
+                        ? "Cannot delete car: It is associated with existing sales records." 
+                        : "Error deleting car: " + msg;
+                    Alert alert = new Alert(Alert.AlertType.ERROR, displayMsg);
                     alert.showAndWait();
                 }
             });
         });
 
+        showAllCars.setText("Refresh List");
         showAllCars.setOnAction(e -> {
-            // Create a new stage for the table view
-            Stage tableStage = new Stage();
-            tableStage.setTitle("All Cars - Table View");
-
-            TableView<Car> carTable = new TableView<>();
-            carTable.setPrefHeight(700);
-            carTable.setPrefWidth(900);
-
-            // Define columns
-            TableColumn<Car, String> idCol = new TableColumn<>("ID");
-            idCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getId()));
-
-            TableColumn<Car, String> modelCol = new TableColumn<>("Model");
-            modelCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getModel()));
-
-            TableColumn<Car, String> variantCol = new TableColumn<>("Variant");
-            variantCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getVariant()));
-
-            TableColumn<Car, Double> priceCol = new TableColumn<>("Price");
-            priceCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getPrice()).asObject());
-
-            TableColumn<Car, Double> mileageCol = new TableColumn<>("Mileage");
-            mileageCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getMileage()).asObject());
-
-            TableColumn<Car, String> colorCol = new TableColumn<>("Color");
-            colorCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getColor()));
-
-            TableColumn<Car, String> typeCol = new TableColumn<>("Type");
-            typeCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getType()));
-
-            TableColumn<Car, Double> weightCol = new TableColumn<>("Weight");
-            weightCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getWeight()).asObject());
-
-            TableColumn<Car, String> numberPlateCol = new TableColumn<>("Number Plate");
-            numberPlateCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getNumberPlate()));
-
-            TableColumn<Car, String> chassisCol = new TableColumn<>("Chassis No.");
-            chassisCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getChassisNumber()));
-
-            carTable.getColumns().addAll(idCol, modelCol, variantCol, priceCol, mileageCol, colorCol, typeCol, weightCol, numberPlateCol, chassisCol);
-
-            // Load data
-            try {
-                List<Car> cars = carDAO.getAll();
-                carTable.getItems().setAll(cars);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Error loading cars: " + ex.getMessage());
-                alert.showAndWait();
-                return;
-            }
-
-            VBox vbox = new VBox(carTable);
-            vbox.setPadding(new Insets(15));
-            Scene tableScene = new Scene(vbox, 1000, 700);
-            String tableCss = getClass().getResource("/com/example/projectfxv5/css/styles.css").toExternalForm();
-            tableScene.getStylesheets().add(tableCss);
-
-            tableStage.setScene(tableScene);
-            tableStage.show();
+            refreshTable.run();
         });
     }
 
@@ -954,6 +940,9 @@ public class Projectv5 extends Application {
         Button addButton = new Button("Add Employee");
         addButton.getStyleClass().add("action-button");
 
+        Button deleteButton = new Button("Delete Employee");
+        deleteButton.getStyleClass().add("action-button");
+
         // Add form elements to grid
         formGrid.add(idLabel, 0, 0);
         formGrid.add(idField, 1, 0);
@@ -961,19 +950,40 @@ public class Projectv5 extends Application {
         formGrid.add(nameField, 1, 1);
         formGrid.add(salaryLabel, 0, 2);
         formGrid.add(salaryField, 1, 2);
-        formGrid.add(addButton, 1, 3);
+        
+        HBox buttonBox = new HBox(10);
+        buttonBox.getChildren().addAll(addButton, deleteButton);
+        formGrid.add(buttonBox, 1, 3);
 
         // Status label for feedback
         Label statusLabel = new Label("");
         statusLabel.getStyleClass().add("status-label");
 
-        // Text area for displaying employees
+        // TableView for displaying employees
         Label employeeListLabel = new Label("Employee Details:");
         employeeListLabel.getStyleClass().add("section-header");
 
-        TextArea area = new TextArea();
-        area.setEditable(false);
-        area.setPrefHeight(300);
+        TableView<Employee> employeeTable = new TableView<>();
+        employeeTable.getStyleClass().add("modern-table");
+        employeeTable.setPrefHeight(300);
+        employeeTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<Employee, String> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getId()));
+        TableColumn<Employee, String> nameCol = new TableColumn<>("Name");
+        nameCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getName()));
+        TableColumn<Employee, Double> salaryCol = new TableColumn<>("Salary");
+        salaryCol.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getSalary()).asObject());
+
+        employeeTable.getColumns().addAll(idCol, nameCol, salaryCol);
+
+        Runnable refreshEmployeeTable = () -> {
+            try {
+                employeeTable.getItems().setAll(employeeDAO.getAll());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        };
 
         // Add button action
         addButton.setOnAction(e -> {
@@ -1012,7 +1022,7 @@ public class Projectv5 extends Application {
                 statusLabel.getStyleClass().remove("error-text");
 
                 // Refresh employee list
-                refreshEmployeeList(area);
+                refreshEmployeeTable.run();
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -1021,16 +1031,44 @@ public class Projectv5 extends Application {
             }
         });
 
+        // Delete button action
+        deleteButton.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setHeaderText("Enter Employee ID to Delete:");
+            dialog.showAndWait().ifPresent(empId -> {
+                try {
+                    int affected = employeeDAO.delete(empId);
+                    if (affected == 0) {
+                        statusLabel.setText("No employee found with ID: " + empId);
+                        statusLabel.getStyleClass().add("error-text");
+                    } else {
+                        statusLabel.setText("Employee deleted successfully.");
+                        statusLabel.getStyleClass().remove("error-text");
+                        refreshEmployeeTable.run();
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    String msg = ex.getMessage();
+                    if (msg != null && msg.contains("foreign key constraint fails")) {
+                        statusLabel.setText("Cannot delete employee: They have associated sales records.");
+                    } else {
+                        statusLabel.setText("Error deleting employee: " + msg);
+                    }
+                    statusLabel.getStyleClass().add("error-text");
+                }
+            });
+        });
+
         // Add all components to content
         content.getChildren().addAll(
                 addEmployeeLabel, formGrid, statusLabel,
-                new Separator(), employeeListLabel, area
+                new Separator(), employeeListLabel, employeeTable
         );
 
         mainLayout.setCenter(content);
 
         // Initial load of employee list
-        refreshEmployeeList(area);
+        refreshEmployeeTable.run();
 
         // Set the scene
         scene.setRoot(mainLayout);
@@ -1038,36 +1076,7 @@ public class Projectv5 extends Application {
         primaryStage.setTitle("Employee Data - Platinum Auto Japan");
     }
 
-    /**
-     * Helper method to refresh the employee list in the text area.
-     *
-     * @param area The TextArea to update with employee data
-     */
-    private void refreshEmployeeList(TextArea area) {
-        try {
-            // Clear existing content
-            area.clear();
 
-            // Use the DAO to get all employees
-            List<Employee> employees = employeeDAO.getAll();
-
-            if (employees.isEmpty()) {
-                area.setText("No employees found in the database.");
-            } else {
-                // Display each employee in the text area
-                for (Employee employee : employees) {
-                    area.appendText("- Employee:\n"
-                            + "ID: " + employee.getId() + "\n"
-                            + "Name: " + employee.getName() + "\n"
-                            + "Salary: " + employee.getSalary() + "\n\n"
-                            + "----------------------------------------\n\n");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            area.setText("Failed to load employee data: " + e.getMessage());
-        }
-    }
 
     /**
      * Displays the customer data window. Shows a list of all customers with
@@ -1153,13 +1162,33 @@ public class Projectv5 extends Application {
         Label statusLabel = new Label("");
         statusLabel.getStyleClass().add("status-label");
 
-        // Text area for displaying customers
+        // TableView for displaying customers
         Label customerListLabel = new Label("Customer Details:");
         customerListLabel.getStyleClass().add("section-header");
 
-        TextArea area = new TextArea();
-        area.setEditable(false);
-        area.setPrefHeight(300);
+        TableView<Customer> customerTable = new TableView<>();
+        customerTable.getStyleClass().add("modern-table");
+        customerTable.setPrefHeight(300);
+        customerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<Customer, String> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getId()));
+        TableColumn<Customer, String> nameCol = new TableColumn<>("Name");
+        nameCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getName()));
+        TableColumn<Customer, String> phoneCol = new TableColumn<>("Phone");
+        phoneCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getPhone()));
+        TableColumn<Customer, String> emailCol = new TableColumn<>("Email");
+        emailCol.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getEmail()));
+
+        customerTable.getColumns().addAll(idCol, nameCol, phoneCol, emailCol);
+
+        Runnable refreshCustomerTable = () -> {
+            try {
+                customerTable.getItems().setAll(customerDAO.getAll());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        };
 
         // Add button action
         addButton.setOnAction(e -> {
@@ -1190,7 +1219,7 @@ public class Projectv5 extends Application {
                 statusLabel.getStyleClass().remove("error-text");
 
                 // Refresh customer list
-                refreshCustomerList(area);
+                refreshCustomerTable.run();
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -1202,13 +1231,13 @@ public class Projectv5 extends Application {
         // Add all components to content
         content.getChildren().addAll(
                 addCustomerLabel, formGrid, statusLabel,
-                new Separator(), customerListLabel, area
+                new Separator(), customerListLabel, customerTable
         );
 
         mainLayout.setCenter(content);
 
         // Initial load of customer list
-        refreshCustomerList(area);
+        refreshCustomerTable.run();
 
         // Set the scene
         scene.setRoot(mainLayout);
@@ -1216,37 +1245,7 @@ public class Projectv5 extends Application {
         primaryStage.setTitle("Customer Data - Platinum Auto Japan");
     }
 
-    /**
-     * Helper method to refresh the customer list in the text area.
-     *
-     * @param area The TextArea to update with customer data
-     */
-    private void refreshCustomerList(TextArea area) {
-        try {
-            // Clear existing content
-            area.clear();
 
-            // Use the DAO to get all customers
-            List<Customer> customers = customerDAO.getAll();
-
-            if (customers.isEmpty()) {
-                area.setText("No customers found in the database.");
-            } else {
-                // Display each customer in the text area
-                for (Customer customer : customers) {
-                    area.appendText("- Customer:\n"
-                            + "ID: " + customer.getId() + "\n"
-                            + "Name: " + customer.getName() + "\n"
-                            + "Phone: " + customer.getPhone() + "\n"
-                            + "Email: " + customer.getEmail() + "\n\n"
-                            + "----------------------------------------\n\n");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            area.setText("Failed to load customer data: " + e.getMessage());
-        }
-    }
 
     /**
      * Displays the sales management window. Allows creating new sales and
@@ -1369,6 +1368,8 @@ public class Projectv5 extends Application {
 
         // Table for recent sales
         TableView<Sale> salesTable = new TableView<>();
+        salesTable.getStyleClass().add("modern-table");
+        salesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         salesTable.setPrefHeight(300);
 
         // Define columns
@@ -1706,6 +1707,8 @@ public class Projectv5 extends Application {
 
         // TableView for displaying sales
         TableView<Sale> salesTable = new TableView<>();
+        salesTable.getStyleClass().add("modern-table");
+        salesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         salesTable.setPrefHeight(700);
 
         // Define columns
